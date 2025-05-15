@@ -1,0 +1,13 @@
+*.tfstate
+*.tfstate.*
+.terraform/
+credencial/*.json
+windows_amd64
+.ipynb_checkpoints
+infra_gcp/credencial/*.json
+infra_gcp/.terraform*
+infra_gcp/*.tfstate
+infra_gcp/*.tfstate.*
+infra_gcp/.terraform/
+infra_gcp/.terraform.lock.hcl
+infra_gcp/terraform.tfstate.backup

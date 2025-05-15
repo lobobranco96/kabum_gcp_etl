@@ -1,0 +1,6 @@
+beautifulsoup4==4.11.1
+pandas==1.5.3
+google-cloud-bigquery
+google-cloud-storage
+webdriver-manager
+selenium==4.9.1

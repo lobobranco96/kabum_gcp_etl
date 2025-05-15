@@ -1,0 +1,47 @@
+[
+  {
+    "name": "nome_produto",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "detalhes",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "preco_atual",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "preco_antigo",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "desconto_percentual",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "avaliacao",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "unidades",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "cupom",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "link",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  }
+]

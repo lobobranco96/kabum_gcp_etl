@@ -1,0 +1,5 @@
+project_id = "lobobranco-458901"
+location     = "us"
+region = "us-central1"
+image_version = "composer-3-airflow-2.9.3" 
+environment_size = "ENVIRONMENT_SIZE_SMALL"
