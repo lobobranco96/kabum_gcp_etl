@@ -21,19 +21,17 @@ Este repositório demonstra minha experiência prática com **Terraform**, utili
 ### 1. **Buckets no Cloud Storage**
 Provisionamento automático de buckets para diferentes camadas de um Data Lake:
 
-- `lobobranco-raw` → Camada Raw
-- `lobobranco-processed` → Camada Processada
-- `lobobranco-compose` → DAGs e logs do Cloud Composer
+- `kabum-raw` → Camada Raw
+- `kabum-processed` → Camada Processada
 
 ---
 
 ### 2. **BigQuery**
 Criação de:
 
-- Dataset: `etl_dataset`
+- Dataset: `kabum_dataset`
 - Tabelas:
-  - `clientes`
-  - `vendas`
+  - `produtos`
   
 Schemas definidos em JSON para garantir consistência de dados.
 
@@ -45,7 +43,6 @@ Criação de um ambiente do **Composer 3 (Airflow 2.9.3)** com:
 - Tamanho configurável (`ENVIRONMENT_SIZE_SMALL`)
 - Configuração de variáveis de ambiente
 - Recursos de CPU/memória definidos para `scheduler`, `worker` e `web_server`
-- Bucket próprio para armazenar DAGs
 
 ---
 
@@ -72,30 +69,30 @@ Criação de um ambiente do **Composer 3 (Airflow 2.9.3)** com:
 
 > Pré-requisitos: Terraform instalado e credencial do service-account do GCP baixada e armazenada no diretorio de credencial`
 
-> In
+> Ativar a credencial para a service account
 ```bash
-!gcloud auth activate-service-account --key-file=/infra_gcp/credencial/lobobranco-458901-2d6bc0756f93.json
+gcloud auth activate-service-account --key-file=/infra_gcp/credencial/lobobranco-458901-2d6bc0756f93.json
 
 # Define o projeto corretamente
-!gcloud config set project lobobranco-458901
+gcloud config set project <lobobranco-458901> project_id
 
 # adicionar ao service account do compute engine as roles necessarias
-!gcloud projects add-iam-policy-binding lobobranco-458901 \
+gcloud projects add-iam-policy-binding lobobranco-458901 \
    --member="serviceAccount:1075705997765@cloudbuild.gserviceaccount.com" \
    --role="roles/storage.admin"
 
 # # Permissão para publicar imagens no Artifact Registry
-!gcloud projects add-iam-policy-binding lobobranco-458901 \
+gcloud projects add-iam-policy-binding lobobranco-458901 \
    --member="serviceAccount:1075705997765@cloudbuild.gserviceaccount.com" \
    --role="roles/artifactregistry.writer"
 
 # Dá permissão para acessar Cloud Storage
-!gcloud projects add-iam-policy-binding lobobranco-458901 \
+gcloud projects add-iam-policy-binding lobobranco-458901 \
   --member="serviceAccount:1075705997765-compute@developer.gserviceaccount.com" \
   --role="roles/storage.admin"
 
 # Dá permissão para o Cloud Composer funcionar
-!gcloud projects add-iam-policy-binding lobobranco-458901 \
+gcloud projects add-iam-policy-binding lobobranco-458901 \
   --member="serviceAccount:1075705997765-compute@developer.gserviceaccount.com" \
   --role="roles/composer.worker"
 ```
@@ -113,6 +110,17 @@ terraform apply --auto-approve
 
 # Destruir toda a infra se necessario
 terraform destroy --auto-approve
+```
+
+```bash
+gsutil cp kabum_dag.py gs://<bucket_composer>/dags/
+gsutil cp extraction.py gs://<bucket_composer>/dags/
+gsutil cp transformation.py gs://<bucket_composer>/dags/
+gsutil cp requirements.txt gs://<bucket_composer>/composer/requirements/.
+
+gcloud composer environments update lobobranco-composer \
+    --location us-central1 \
+     --update-pypi-packages-from-file requirements.txt
 ```
 
 ## Objetivo

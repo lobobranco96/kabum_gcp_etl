@@ -1,6 +1,6 @@
 module "dataset" {
   source     = "./modules/bigquery_dataset"
-  dataset_id = "etl_dataset"
+  dataset_id = "kabum_dataset"
   location   = var.location
 }
 
