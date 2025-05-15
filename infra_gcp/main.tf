@@ -48,7 +48,6 @@ module "composer_env" {
   project_id       = var.project_id
   image_version    = var.image_version  
   environment_size = var.environment_size
-
-  # imagem customizada com Selenium + Chrome
-  docker_image_repository = "us-central1-docker.pkg.dev/${var.project_id}/selenium-images/scraper:latest"
+  docker_image     = "us-central1-docker.pkg.dev/${var.project_id}/selenium-images/scraper:latest" 
 }
+

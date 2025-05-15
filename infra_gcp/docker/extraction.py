@@ -19,11 +19,10 @@ def init_driver():
     chrome_options = Options()
     
     # Caminhos configurados para o Composer com a instalação do Chrome
-    chrome_options.binary_location = "/usr/bin/chrome"  # Caminho para o Chrome
+    chrome_options.binary_location = "/usr/bin/chromium"  # Caminho para o Chrome
     chrome_options.add_argument('--headless')            # Executar o Chrome em modo headless
     chrome_options.add_argument('--no-sandbox')          # Desabilitar o sandbox (necessário no ambiente do Composer)
     chrome_options.add_argument('--disable-dev-shm-usage')  # Aumentar a memória compartilhada
-    chrome_options.add_argument('--remote-debugging-port=9222')  # Para depuração remota
     
     # Caminho para o Chromedriver (a instalação do Chromedriver no Composer normalmente estará em /usr/bin)
     service = Service('/usr/bin/chromedriver')

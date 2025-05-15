@@ -8,3 +8,9 @@ variable "image_version" {
 variable "environment_size" {
   type        = string
 }
+
+variable "docker_image" {
+  description = "Custom Docker image for Composer environment"
+  type        = string
+  default     = ""
+}

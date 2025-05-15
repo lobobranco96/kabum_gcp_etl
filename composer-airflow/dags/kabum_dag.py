@@ -1,10 +1,9 @@
 from airflow import DAG
-from airflow.operators.python import PythonOperator
-from extraction import extrair_dados_kabum
-from transformation import transformacao_kabum
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
 from datetime import datetime
 
 url_kabum = "https://www.kabum.com.br/promocao/FESTIVALDECUPONS"
+docker_image = "us-central1-docker.pkg.dev/lobobranco-458901/selenium-images/scraper:latest"  
 
 with DAG(
     'etl_kabum',
@@ -18,18 +17,25 @@ with DAG(
     catchup=False,
 ) as dag:
 
-    # Tarefa de extração de dados
-    extrair_dados_task = PythonOperator(
-        task_id='extrair_dados_kabum',
-        python_callable=extrair_dados_kabum,
-        op_args=[url_kabum],
+    extrair_dados_task = KubernetesPodOperator(
+        namespace='default',               
+        image=docker_image,
+        cmds=["python", "/app/extraction.py"],
+        arguments=[url_kabum],
+        name="extrair-dados-kabum",
+        task_id="extrair_dados_kabum",
+        get_logs=True,
+        is_delete_operator_pod=True,
     )
 
-    # Tarefa de transformação dos dados
-    transformar_dados_task = PythonOperator(
-        task_id='transformar_dados_kabum',
-        python_callable=transformacao_kabum,
+    transformar_dados_task = KubernetesPodOperator(
+        namespace='default',
+        image=docker_image,
+        cmds=["python", "/app/transformation.py"],
+        name="transformar-dados-kabum",
+        task_id="transformar_dados_kabum",
+        get_logs=True,
+        is_delete_operator_pod=True,
     )
 
-    # Definindo a sequência de execução das tarefas
     extrair_dados_task >> transformar_dados_task

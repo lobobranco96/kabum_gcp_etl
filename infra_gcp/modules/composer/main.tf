@@ -6,7 +6,6 @@ resource "google_composer_environment" "this" {
   config {
     software_config {
       image_version = var.image_version
-
       env_variables = {
         GOOGLE_PROJECT = var.project_id
       }
@@ -18,13 +17,11 @@ resource "google_composer_environment" "this" {
         memory_gb  = 2
         storage_gb = 1
       }
-
       web_server {
         cpu        = 1
         memory_gb  = 2
         storage_gb = 1
       }
-
       worker {
         cpu        = 1
         memory_gb  = 2
