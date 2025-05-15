@@ -3,6 +3,10 @@ from google.cloud import storage
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 from bs4 import BeautifulSoup
 import time
 import pandas as pd
@@ -48,12 +52,17 @@ def extrair_dados_kabum(url):
     for i in range(1, ultima_pagina + 1):
         url_pag = f'{url}?page_number={i}&page_size=20&facet_filters=&sort=&variant=null'
         driver.get(url_pag)
-        time.sleep(2)
+
+        # Espera até que os cards estejam disponíveis na página
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "productCard"))
+        )
+
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         produtos_pagina = soup.find_all(class_="productCard")
     # Lista para armazenar os produtos
 
-        for produto in soup.find_all(class_="productCard"):
+        for produto in produtos_pagina:
             try:
                 extra = produto.find("div", class_="relative flex items-start justify-between w-full p-8 pb-0 h-48")
                 cupom = extra.find("div", class_="flex overflow-hidden pr-2")
