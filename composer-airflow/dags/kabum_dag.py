@@ -18,7 +18,7 @@ with DAG(
 ) as dag:
 
     extrair_dados_task = KubernetesPodOperator(
-        namespace='default',               
+        namespace='composer-workloads',               
         image=docker_image,
         cmds=["python", "/app/extraction.py"],
         arguments=[url_kabum],
@@ -29,7 +29,7 @@ with DAG(
     )
 
     transformar_dados_task = KubernetesPodOperator(
-        namespace='default',
+        namespace='composer-workloads',
         image=docker_image,
         cmds=["python", "/app/transformation.py"],
         name="transformar-dados-kabum",

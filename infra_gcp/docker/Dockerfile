@@ -1,8 +1,8 @@
-FROM apache/airflow:2.9.3-python3.10
+FROM python:3.10-bullseye
 
 USER root
 
-# Instalar Chrome e Chromedriver com compatibilidade entre versões
+# Instalar dependências do sistema e o Chrome/Chromedriver
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
@@ -14,25 +14,24 @@ RUN apt-get update && apt-get install -y \
     libx11-xcb1 \
     chromium \
     chromium-driver \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Definir variáveis de ambiente
+# Variáveis de ambiente esperadas pelo Selenium
 ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 ENV PATH=$PATH:/usr/bin
 
-# Mudar para usuário airflow para instalar dependências Python
-USER airflow
-
+# Copiar requirements e instalar dependências Python
 COPY requirements.txt .
-
-# Agora sim, como airflow:
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copiar seus scripts Python
-COPY --chown=airflow:root extraction.py /app/extraction.py
-COPY --chown=airflow:root transformation.py /app/transformation.py
+# Copiar os scripts para o diretório de trabalho
+COPY extraction.py /app/extraction.py
+COPY transformation.py /app/transformation.py
 
 WORKDIR /app
+
+# Comando padrão (pode ser sobrescrito pelo KubernetesPodOperator)
+CMD ["python", "extraction.py"]

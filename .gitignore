@@ -11,3 +11,5 @@ infra_gcp/*.tfstate.*
 infra_gcp/.terraform/
 infra_gcp/.terraform.lock.hcl
 infra_gcp/terraform.tfstate.backup
+terraform_1.11.4_linux_amd64.zip
+LICENSE.txt
