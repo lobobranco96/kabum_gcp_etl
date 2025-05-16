@@ -3,15 +3,20 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import Kubernete
 from datetime import datetime
 from airflow.models import Variable
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
+from airflow.utils.dates import days_ago
 
 url_kabum = "https://www.kabum.com.br/promocao/FESTIVALDECUPONS"
 docker_image = "us-central1-docker.pkg.dev/lobobranco-458901/selenium-images/scraper:latest"  
 
-project_id = Variable.get("project_id")
-bucket = Variable.get("processed_bucket")
-dataset = Variable.get("dataset")
-tabela = Variable.get("tabela")
+# project_id = Variable.get("project_id")
+# bucket = Variable.get("processed_bucket")
+# dataset = Variable.get("dataset")
+# tabela = Variable.get("tabela")
 
+project_id = "lobobranco-458901"
+bucket = "kabum-processed"
+dataset = "kabum_dataset"
+tabela = "produtos"
 with DAG(
     'etl_kabum',
     default_args={
@@ -48,13 +53,12 @@ with DAG(
     load_to_bq = GCSToBigQueryOperator(
         task_id="load_processed_data_to_bq",
         bucket=bucket,
-        source_objects=["processed/seuarquivo.csv"],  
+        source_objects=["promocao/festivaldecupons_produtos_{{ ds }}.csv"],  
         destination_project_dataset_table=f"{project_id}:{dataset}.{tabela}",
         source_format="CSV",  
         skip_leading_rows=1,  
         write_disposition="WRITE_APPEND",  
         field_delimiter=",",
-        autodetect=False,  # False ja tenho o schema definido
-        dag=dag,
+        autodetect=True,
     )
     extrair_dados_task >> transformar_dados_task >> load_to_bq
