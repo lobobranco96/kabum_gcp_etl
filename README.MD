@@ -75,11 +75,6 @@ Google Cloud Composer (Apache Airflow)
 Google BigQuery
 ```
 
-## Próximos passos
-Incluir monitoramento e alertas via Airflow.
-Carregar os dados transformados em um Data Warehouse (ex: BigQuery).
-
-
 ## Requisitos
 Conta no Google Cloud Platform com o Composer e Storage habilitados.
 Service Account com permissões adequadas.
