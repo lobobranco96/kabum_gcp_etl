@@ -1,9 +1,27 @@
+#####################################################################
+# Projeto de Infraestrutura GCP para Pipeline de Dados da Kabum
+# Recursos provisionados:
+# - Buckets GCS (raw e processed)
+# - Dataset e tabela BigQuery
+# - Cluster GKE leve para testes com K8sPodOperator
+# - Repositório Docker no Artifact Registry
+# - Environment do Cloud Composer com dependências Airflow
+# - IAM para integrações seguras entre serviços
+#####################################################################
+
+#####################
+# Módulo BigQuery
+#####################
+
+
+# Criação do dataset "kabum_dataset"
 module "dataset" {
   source     = "./modules/bigquery_dataset"
   dataset_id = "kabum_dataset"
   location   = var.location
 }
 
+# Criação da tabela "produtos" com schema definido em JSON
 module "produtos" {
   source     = "./modules/bigquery_table"
   dataset_id = module.dataset.dataset_id
@@ -11,6 +29,11 @@ module "produtos" {
   schema     = file("${path.module}/schemas/produtos_schema.json")
 }
 
+#####################
+# Buckets GCS
+#####################
+
+# Bucket para dados brutos (raw)
 module "raw_bucket" {
   source        = "./modules/storage_bucket"
   name          = "kabum-raw"
@@ -18,6 +41,7 @@ module "raw_bucket" {
   force_destroy = true
 }
 
+# Bucket para dados transformados (processed)
 module "processed_bucket" {
   source        = "./modules/storage_bucket"
   name          = "kabum-processed"
@@ -25,6 +49,11 @@ module "processed_bucket" {
   force_destroy = true
 }
 
+#############################
+# Artifact Registry + Build
+#############################
+
+# Repositório Docker para armazenar imagem do scraper Selenium
 resource "google_artifact_registry_repository" "docker_repo" {
   provider      = google
   location      = var.region
@@ -33,12 +62,18 @@ resource "google_artifact_registry_repository" "docker_repo" {
   format        = "DOCKER"
 }
 
+# Envia a imagem Docker para o Artifact Registry usando o Cloud Build
 resource "null_resource" "build_docker_image" {
   provisioner "local-exec" {
     command = "gcloud builds submit --project=${var.project_id} --tag=us-central1-docker.pkg.dev/${var.project_id}/selenium-images/scraper:latest ${path.module}/docker"
   }
 }
 
+#############################
+# Cloud Composer
+#############################
+
+# Provisiona ambiente gerenciado do Airflow com dependências necessárias
 module "composer_env" {
   source           = "./modules/composer"
   name             = "lobobranco-composer"
@@ -56,6 +91,17 @@ module "composer_env" {
 data "google_project" "project" {
   project_id = var.project_id
 }
+
+
+#############################
+# IAM: Permissões de serviço
+#############################
+
+# Concede permissões ao Cloud Build e Cloud Composer para:
+# - Gerenciar buckets
+# - Acessar imagens Docker
+# - Executar jobs BigQuery
+# - Ler objetos no GCS
 
 locals {
   cloudbuild_sa = "serviceAccount:${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
@@ -117,6 +163,7 @@ resource "google_project_iam_member" "composer_storage_object_viewer" {
   member  = "serviceAccount:${var.composer_sa}"
 }
 
+# GKE usado para executar workloads via KubernetesPodOperator
 resource "google_container_cluster" "primary" {
   name     = "cluster-airflow-leve"
   location = var.zone
@@ -135,12 +182,14 @@ resource "google_container_cluster" "primary" {
 
 data "google_client_config" "default" {}
 
+# Acesso à API Kubernetes via Terraform
 provider "kubernetes" {
   host                   = "https://${google_container_cluster.primary.endpoint}"
   token                  = data.google_client_config.default.access_token
   cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
 }
 
+# Concede ao Airflow permissão de editar recursos no namespace do Composer
 resource "kubernetes_cluster_role_binding" "airflow_gke_access" {
   metadata {
     name = "airflow-gke-access"
