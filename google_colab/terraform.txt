@@ -1,0 +1,9 @@
+# Crie uma pasta
+# Entre nela e executa a instalaçao
+%cd kabum_gcp_etl/
+
+# Instala o Terraform
+!wget https://releases.hashicorp.com/terraform/1.11.4/terraform_1.11.4_linux_amd64.zip
+!unzip terraform_1.11.4_linux_amd64.zip
+!mv terraform /usr/local/bin/
+!terraform -v  
