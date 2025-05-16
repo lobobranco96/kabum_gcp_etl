@@ -9,8 +9,8 @@ variable "environment_size" {
   type        = string
 }
 
-variable "docker_image" {
-  description = "Custom Docker image for Composer environment"
-  type        = string
-  default     = ""
+variable "pypi_packages" {
+  description = "Pacotes Python para instalar no Composer (equivalente a requirements.txt)"
+  type        = map(string)
+  default     = {}
 }

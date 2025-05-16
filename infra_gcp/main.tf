@@ -46,14 +46,64 @@ module "composer_env" {
   project_id       = var.project_id
   image_version    = var.image_version  
   environment_size = var.environment_size
-  docker_image     = "us-central1-docker.pkg.dev/${var.project_id}/selenium-images/scraper:latest" 
+
+  pypi_packages = {
+    "apache-airflow-providers-cncf-kubernetes" = ">=10.4.3"
+    "kubernetes" = ">=29.0.0,<32.0.0"
+  }
+}
+
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+locals {
+  cloudbuild_sa = "serviceAccount:${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
+  compute_sa    = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "cloudbuild_storage_admin" {
+  project = var.project_id
+  role    = "roles/storage.admin"
+  member  = local.cloudbuild_sa
+}
+
+resource "google_project_iam_member" "cloudbuild_artifact_writer" {
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = local.cloudbuild_sa
+}
+
+resource "google_project_iam_member" "compute_storage_admin" {
+  project = var.project_id
+  role    = "roles/storage.admin"
+  member  = local.compute_sa
+}
+
+resource "google_project_iam_member" "compute_composer_worker" {
+  project = var.project_id
+  role    = "roles/composer.worker"
+  member  = local.compute_sa
+}
+
+
+resource "google_project_iam_member" "composer_worker_container" {
+  project = var.project_id
+  role    = "roles/container.developer"
+  member  = "serviceAccount:service-${data.google_project.project.number}@cloudcomposer-accounts.iam.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "composer_artifact_reader" {
+  project = var.project_id
+  role    = "roles/artifactregistry.reader"
+  member  = "serviceAccount:service-${data.google_project.project.number}@cloudcomposer-accounts.iam.gserviceaccount.com"
 }
 
 resource "google_container_cluster" "primary" {
   name     = "cluster-airflow-leve"
   location = var.zone
 
-  deletion_protection = false  # <-- isso aqui é o necessário
+  deletion_protection = false 
 
   initial_node_count = 1
 
@@ -87,6 +137,6 @@ resource "kubernetes_cluster_role_binding" "airflow_gke_access" {
   subject {
     kind      = "ServiceAccount"
     name      = "default"
-    namespace = "default"
+    namespace = "composer-workloads"
   }
 }

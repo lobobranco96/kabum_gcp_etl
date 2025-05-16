@@ -6,9 +6,15 @@ resource "google_composer_environment" "this" {
   config {
     software_config {
       image_version = var.image_version
+
+      # pacotes do requirements
+      pypi_packages = var.pypi_packages
+    }
       env_variables = {
         GOOGLE_PROJECT = var.project_id
+        DOCKER_IMAGE   = var.docker_image
       }
+
     }
 
     workloads_config {
@@ -31,4 +37,3 @@ resource "google_composer_environment" "this" {
 
     environment_size = var.environment_size
   }
-}

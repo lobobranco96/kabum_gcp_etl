@@ -33,3 +33,8 @@ variable "zone" {
   type        = string
   default     = "us-central1-a"
 }
+variable "project_number" {
+  description = "Número do projeto GCP (não o project_id)"
+  type        = string
+    default     = "123456789012"  
+}
