@@ -14,3 +14,12 @@ variable "pypi_packages" {
   type        = map(string)
   default     = {}
 }
+variable "processed_bucket" {
+  default = "kabum-processed"
+  }
+variable "dataset" {
+  default = "kabum_dataset"
+}
+variable "tabela" {
+  default = "produtos"
+}

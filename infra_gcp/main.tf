@@ -48,7 +48,7 @@ module "composer_env" {
   environment_size = var.environment_size
 
   pypi_packages = {
-    "apache-airflow-providers-cncf-kubernetes" = ">=10.4.3"
+    "apache-airflow-providers-cncf-kubernetes" = "==8.4.2"
     "kubernetes" = ">=29.0.0,<32.0.0"
   }
 }
@@ -97,6 +97,24 @@ resource "google_project_iam_member" "composer_artifact_reader" {
   project = var.project_id
   role    = "roles/artifactregistry.reader"
   member  = "serviceAccount:service-${data.google_project.project.number}@cloudcomposer-accounts.iam.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "composer_bigquery_job_user" {
+  project = var.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${var.composer_sa}"
+}
+
+resource "google_project_iam_member" "composer_bigquery_data_editor" {
+  project = var.project_id
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${var.composer_sa}"
+}
+
+resource "google_project_iam_member" "composer_storage_object_viewer" {
+  project = var.project_id
+  role    = "roles/storage.objectViewer"
+  member  = "serviceAccount:${var.composer_sa}"
 }
 
 resource "google_container_cluster" "primary" {

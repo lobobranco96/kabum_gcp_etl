@@ -38,3 +38,8 @@ variable "project_number" {
   type        = string
     default     = "123456789012"  
 }
+
+variable "composer_sa" {
+  description = "Service Account do Cloud Composer (Airflow)"
+  default     = "composer-sa@lobobranco-458901.iam.gserviceaccount.com"
+}

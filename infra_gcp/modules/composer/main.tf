@@ -14,7 +14,13 @@ resource "google_composer_environment" "this" {
         GOOGLE_PROJECT = var.project_id
         DOCKER_IMAGE   = var.docker_image
       }
-
+    airflow_config_overrides = {
+            "variables" = jsonencode({
+              project_id = var.project_id
+              processed_bucket = var.processed_bucket
+              dataset     = var.dataset
+              tabela      = var.tabela
+            })
     }
 
     workloads_config {
@@ -37,3 +43,4 @@ resource "google_composer_environment" "this" {
 
     environment_size = var.environment_size
   }
+}

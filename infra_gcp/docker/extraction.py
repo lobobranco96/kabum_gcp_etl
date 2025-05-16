@@ -11,62 +11,55 @@ from bs4 import BeautifulSoup
 import time
 import pandas as pd
 import math
-import time
 import sys
+import logging
 
-# Função para inicializar o driver do Selenium
+# Configuração do logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 def init_driver():
-    # Inicializa o objeto de opções para o Chrome
     chrome_options = Options()
-    
-    # Caminhos configurados para o Composer com a instalação do Chrome
-    chrome_options.binary_location = "/usr/bin/chromium"  # Caminho para o Chrome
-    chrome_options.add_argument('--headless')            # Executar o Chrome em modo headless
-    chrome_options.add_argument('--no-sandbox')          # Desabilitar o sandbox (necessário no ambiente do Composer)
-    chrome_options.add_argument('--disable-dev-shm-usage')  # Aumentar a memória compartilhada
-    
-    # Caminho para o Chromedriver (a instalação do Chromedriver no Composer normalmente estará em /usr/bin)
+    chrome_options.binary_location = "/usr/bin/chromium"
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
     service = Service('/usr/bin/chromedriver')
+    return webdriver.Chrome(service=service, options=chrome_options)
 
-    # Inicializa o WebDriver com o serviço configurado e as opções definidas
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-
-    return driver
-# Função de scraping para extrair dados do Kabum
 def extrair_dados_kabum(url):
     driver = init_driver()
+    logging.info(f"Acessando a URL: {url}")
     driver.get(url)
-    
-    # Faz o parsing do HTML com BeautifulSoup
+
     soup = BeautifulSoup(driver.page_source, "lxml")
-
-    # Extrai a quantidade total de paginas
     qtd_itens = soup.find('div', id='listingCount').get_text().strip()
-    index = qtd_itens.find(' ')
-    qtd = qtd_itens[:index]
-    ultima_pagina = math.ceil(int(qtd) / 20)
-
+    qtd = int(qtd_itens.split(' ')[0])
+    ultima_pagina = math.ceil(qtd / 20)
+    logging.info(f"Total de itens: {qtd} - Total de páginas: {ultima_pagina}")
 
     produtos = []
 
     for i in range(1, ultima_pagina + 1):
         url_pag = f'{url}?page_number={i}&page_size=20&facet_filters=&sort=&variant=null'
+        logging.info(f"Scraping da página {i}: {url_pag}")
         driver.get(url_pag)
 
-        # Espera até que os cards estejam disponíveis na página
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "productCard"))
-        )
+        try:
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "productCard"))
+            )
+        except Exception as e:
+            logging.warning(f"Timeout esperando produtos na página {i}: {e}")
+            continue
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         produtos_pagina = soup.find_all(class_="productCard")
-    # Lista para armazenar os produtos
 
         for produto in produtos_pagina:
             try:
                 extra = produto.find("div", class_="relative flex items-start justify-between w-full p-8 pb-0 h-48")
-                cupom = extra.find("div", class_="flex overflow-hidden pr-2")
-                avaliacao = extra.find("span", class_="text-xxs text-black-600 leading-none pt-4")
+                cupom = extra.find("div", class_="flex overflow-hidden pr-2") if extra else None
+                avaliacao = extra.find("span", class_="text-xxs text-black-600 leading-none pt-4") if extra else None
                 nome = produto.find("span", class_="nameCard")
                 preco_antigo = produto.find("span", class_="oldPriceCard")
                 preco_atual = produto.find("span", class_="priceCard")
@@ -74,7 +67,7 @@ def extrair_dados_kabum(url):
                 desconto = produto.find("div", class_="text-xs flex rounded-8 text-white-500 px-4 h-16 group-hover:hidden desktop:mt-4 desktopLarge:mt-2 bg-secondary-500")
                 link = "https://www.kabum.com.br" + produto.find("a", class_="productLink")["href"]
                 unidades = produto.find("span", class_="text-xxs font-semibold text-black-800 group-hover:hidden")
-                
+
                 produtos.append({
                     "nome_produto": nome.text if nome else "",
                     "preco_antigo": preco_antigo.get_text(strip=True) if preco_antigo else "", 
@@ -87,31 +80,37 @@ def extrair_dados_kabum(url):
                     "unidades": unidades.get_text(strip=True) if unidades else ""
                 })
             except Exception as e:
-                print(f"Erro ao processar produto {produto}: {e}")
+                logging.error(f"Erro ao processar produto: {e}")
+
+    driver.quit()
 
     data_hoje = time.strftime("%Y-%m-%d", time.localtime())
     promocao = url.split("promocao/")[1].lower()
-    
-    # Configuração do bucket e upload
+
     bucket_name = "kabum-raw"
     file_name = f"promocao/{promocao}_produtos_{data_hoje}.csv"
-    client = storage.Client()  
-
-    bucket = client.bucket(bucket_name)
-    blob = bucket.blob(file_name)
-
-    # Criação do CSV em memória e upload para o GCS
+    
     df = pd.DataFrame(produtos)
-    with blob.open("w") as f:
-        df.to_csv(f, index=False)
 
-    driver.quit()
-    return f"Arquivo {file_name} foi carregado com sucesso no bucket {bucket_name}"
+    try:
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(file_name)
+
+        with blob.open("w") as f:
+            df.to_csv(f, index=False)
+
+        logging.info(f"Arquivo salvo com sucesso em: gs://{bucket_name}/{file_name}")
+        return f"Arquivo {file_name} foi carregado com sucesso no bucket {bucket_name}"
+
+    except Exception as e:
+        logging.error(f"Erro ao salvar arquivo no bucket: {e}")
+        raise
 
 def main():
     url = sys.argv[1]
     resultado = extrair_dados_kabum(url)
-    print(resultado)
+    logging.info(resultado)
 
 if __name__ == "__main__":
     main()
