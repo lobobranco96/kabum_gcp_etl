@@ -12,9 +12,32 @@ Este projeto é uma pipeline de **Extração, Transformação e Carga (ETL)** pa
 - **Orquestração**: [Google Cloud Composer (Airflow)](https://cloud.google.com/composer)
 - **Armazenamento**: Google Cloud Storage (GCS)
   - Bucket `kabum-raw`:
-    - `raw/promocao/`: Armazena os dados brutos extraídos da Kabum (camada Raw)
+    - `/promocao/`: Armazena os dados brutos extraídos da Kabum (camada Raw)
   - Bucket `kabum-processed`:
-    - `processed/promocao/`: Armazena os dados transformados e limpos (camada Processed)
+    - `/promocao/`: Armazena os dados transformados e limpos (camada Processed)
+
+## 🧱 Banco de Dados
+
+- **BigQuery**
+  - **Dataset:** `kabum_dataset`
+  - **Tabela:** `produtos`
+  - Utilizado para análise e visualização dos dados com schemas definidos em JSON.
+
+## 📦 Contêineres & Imagens
+
+- **Artifact Registry**
+  - Repositório Docker para armazenar imagens customizadas (ex: Selenium + Chrome).
+  - As imagens são versionadas e utilizadas nos jobs de extração via GKE ou Composer.
+
+## ☸️ Processamento & Execução
+
+- **Google Kubernetes Engine (GKE)**
+  - Cluster `cluster-airflow-leve` criado via Terraform.
+  - Usado para execução de workloads pesadas ou paralelas relacionadas ao Airflow.
+  - **Configuração:**
+    - 1 nó `e2-small`
+    - Disco de 10 GB
+    - Integração com o Composer via permissões IAM e RBAC.
 
 ## 🔄 Fluxo do ETL
 
@@ -31,7 +54,13 @@ Este projeto é uma pipeline de **Extração, Transformação e Carga (ETL)** pa
      - Extração de avaliações e unidades disponíveis.
      - Separação entre nome e detalhes do produto.
      - Padronização do campo de crédito.
-   - Após transformado, o novo dataset é salvo no bucket `kabum-processed`, na pasta `processed/promocao/`.
+   - Após transformado, o novo dataset é salvo no bucket `kabum-processed`, na pasta `/promocao/`.
+
+3. **Carga** (BigQuery):
+  - O CSV transformado é carregado diretamente do bucket kabum-processed para o BigQuery.
+  - A tabela de destino é kabum_dataset.produtos.
+  - O schema da tabela é definido em JSON para garantir a consistência dos dados.
+  - A operação de carga pode ser realizada com o operador GCSToBigQueryOperator no Airflow.
 
 ⚙️ Tecnologias Utilizadas
 
