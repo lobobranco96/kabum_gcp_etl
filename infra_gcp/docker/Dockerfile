@@ -1,4 +1,4 @@
-FROM us-docker.pkg.dev/airflow-helm/charts/airflow:2.9.3-python3.10
+FROM apache/airflow:2.9.3-python3.10
 
 USER root
 
@@ -22,14 +22,17 @@ ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 ENV PATH=$PATH:/usr/bin
 
-# Copiar dependências Python
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+# Mudar para usuário airflow para instalar dependências Python
+USER airflow
 
-# Copiar seus scripts Python para dentro do container
-COPY extraction.py /app/extraction.py
-COPY transformation.py /app/transformation.py
+COPY requirements.txt .
+
+# Agora sim, como airflow:
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copiar seus scripts Python
+COPY --chown=airflow:root extraction.py /app/extraction.py
+COPY --chown=airflow:root transformation.py /app/transformation.py
 
 WORKDIR /app
-
-USER airflow

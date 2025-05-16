@@ -11,6 +11,7 @@ Este repositório demonstra minha experiência prática com **Terraform**, utili
   - Cloud Storage
   - BigQuery
   - Cloud Composer
+  - Cli gcloud
 - **Módulos reutilizáveis** e organização limpa por componentes
 - **Provisionamento automatizado** com variáveis e boas práticas de modularização
 
@@ -71,10 +72,11 @@ Criação de um ambiente do **Composer 3 (Airflow 2.9.3)** com:
 
 > Ativar a credencial para a service account
 ```bash
+## É importante ter o cli da gcloud instalado https://cloud.google.com/sdk/docs/install?hl=pt-br
 gcloud auth activate-service-account --key-file=/infra_gcp/credencial/lobobranco-458901-2d6bc0756f93.json
 
 # Define o projeto corretamente
-gcloud config set project <lobobranco-458901> project_id
+gcloud config set project lobobranco-458901 # << project_id
 
 # adicionar ao service account do compute engine as roles necessarias
 gcloud projects add-iam-policy-binding lobobranco-458901 \

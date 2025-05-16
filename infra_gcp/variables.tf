@@ -27,3 +27,9 @@ variable "repository_id" {
   type    = string
   default = "selenium-images"
 }
+
+variable "zone" {
+  description = "Zona GCP"
+  type        = string
+  default     = "us-central1-a"
+}

@@ -84,3 +84,11 @@ def transformacao_kabum():
             print(f"Arquivo processado foi carregado com sucesso em: {path_processed}")
 
     return "Processamento concluído para todos os arquivos CSV."
+
+
+def main():
+    resultado = transformacao_kabum()
+    print(resultado)
+
+if __name__ == "__main__":
+    main()

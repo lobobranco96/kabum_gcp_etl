@@ -12,6 +12,7 @@ import time
 import pandas as pd
 import math
 import time
+import sys
 
 # Função para inicializar o driver do Selenium
 def init_driver():
@@ -106,3 +107,11 @@ def extrair_dados_kabum(url):
 
     driver.quit()
     return f"Arquivo {file_name} foi carregado com sucesso no bucket {bucket_name}"
+
+def main():
+    url = sys.argv[1]
+    resultado = extrair_dados_kabum(url)
+    print(resultado)
+
+if __name__ == "__main__":
+    main()
