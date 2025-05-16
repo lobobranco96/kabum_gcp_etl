@@ -3,3 +3,4 @@ pandas
 google-cloud-storage
 webdriver-manager
 selenium==4.9.1
+lxml
