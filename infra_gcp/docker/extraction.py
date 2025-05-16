@@ -1,3 +1,18 @@
+"""
+Script de extração de dados de produtos em promoção na Kabum.
+
+Este script realiza web scraping da página de promoções da Kabum utilizando Selenium com Chromium em modo headless.
+Os dados extraídos incluem nome do produto, preços, avaliações, cupom de desconto, entre outros atributos disponíveis.
+
+Os dados coletados são salvos em um arquivo CSV e enviados para um bucket no Google Cloud Storage na camada "raw".
+
+Execução:
+    python extraction.py <URL_DA_PROMOCAO>
+
+Exemplo:
+    python extraction.py https://www.kabum.com.br/promocao/FESTIVALDECUPONS
+"""
+
 from google.cloud import storage
 
 from selenium import webdriver
@@ -14,10 +29,17 @@ import math
 import sys
 import logging
 
-# Configuração do logger
+# Configuração do logger para acompanhar o progresso do scraping
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 def init_driver():
+    """
+    Inicializa o driver do Selenium com Chromium em modo headless.
+
+    Returns:
+        webdriver.Chrome: instância configurada do driver.
+    """
     chrome_options = Options()
     chrome_options.binary_location = "/usr/bin/chromium"
     chrome_options.add_argument('--headless')
@@ -26,7 +48,17 @@ def init_driver():
     service = Service('/usr/bin/chromedriver')
     return webdriver.Chrome(service=service, options=chrome_options)
 
+
 def extrair_dados_kabum(url):
+    """
+    Realiza a extração dos dados de produtos da página de promoções da Kabum.
+
+    Args:
+        url (str): URL da página de promoção no site da Kabum.
+
+    Returns:
+        str: Mensagem informando sucesso ao salvar o arquivo no GCS.
+    """
     driver = init_driver()
     logging.info(f"Acessando a URL: {url}")
     driver.get(url)
@@ -71,10 +103,10 @@ def extrair_dados_kabum(url):
                 produtos.append({
                     "nome_produto": nome.text if nome else "",
                     "preco_antigo": preco_antigo.get_text(strip=True) if preco_antigo else "", 
-                    "preco_atual": preco_atual.get_text(strip=True) if preco_atual else "" ,
-                    "credito": credito.get_text(strip=True) if credito else "" ,
-                    "desconto": desconto.get_text(strip=True) if desconto else "" ,
-                    "avaliacao": avaliacao.get_text(strip=True) if avaliacao else "" ,
+                    "preco_atual": preco_atual.get_text(strip=True) if preco_atual else "",
+                    "credito": credito.get_text(strip=True) if credito else "",
+                    "desconto": desconto.get_text(strip=True) if desconto else "",
+                    "avaliacao": avaliacao.get_text(strip=True) if avaliacao else "",
                     "cupom": cupom.get_text(strip=True) if cupom else "", 
                     "link": link,
                     "unidades": unidades.get_text(strip=True) if unidades else ""
@@ -107,10 +139,16 @@ def extrair_dados_kabum(url):
         logging.error(f"Erro ao salvar arquivo no bucket: {e}")
         raise
 
+
 def main():
+    """
+    Função principal executada ao rodar o script diretamente.
+    Recebe a URL como argumento via linha de comando.
+    """
     url = sys.argv[1]
     resultado = extrair_dados_kabum(url)
     logging.info(resultado)
+
 
 if __name__ == "__main__":
     main()
