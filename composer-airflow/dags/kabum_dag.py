@@ -8,15 +8,15 @@ from airflow.utils.dates import days_ago
 url_kabum = "https://www.kabum.com.br/promocao/FESTIVALDECUPONS"
 docker_image = "us-central1-docker.pkg.dev/lobobranco-458901/selenium-images/scraper:latest"  
 
-# project_id = Variable.get("project_id")
-# bucket = Variable.get("processed_bucket")
-# dataset = Variable.get("dataset")
-# tabela = Variable.get("tabela")
+project_id = Variable.get("project_id")
+bucket = Variable.get("processed_bucket")
+dataset = Variable.get("dataset")
+tabela = Variable.get("tabela")
 
-project_id = "lobobranco-458901"
-bucket = "kabum-processed"
-dataset = "kabum_dataset"
-tabela = "produtos"
+# project_id = "lobobranco-458901"
+# bucket = "kabum-processed"
+# dataset = "kabum_dataset"
+# tabela = "produtos"
 with DAG(
     'etl_kabum',
     default_args={
