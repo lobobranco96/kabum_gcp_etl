@@ -7,20 +7,20 @@ resource "google_composer_environment" "this" {
     software_config {
       image_version = var.image_version
 
-      # pacotes do requirements
       pypi_packages = var.pypi_packages
-    }
+
       env_variables = {
         GOOGLE_PROJECT = var.project_id
-        DOCKER_IMAGE   = var.docker_image
       }
-    airflow_config_overrides = {
-            "variables" = jsonencode({
-              project_id = var.project_id
-              processed_bucket = var.processed_bucket
-              dataset     = var.dataset
-              tabela      = var.tabela
-            })
+
+      airflow_config_overrides = {
+        "variables" = jsonencode({
+          project_id      = var.project_id
+          processed_bucket = var.processed_bucket
+          dataset         = var.dataset
+          tabela          = var.tabela
+        })
+      }
     }
 
     workloads_config {
